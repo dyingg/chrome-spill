@@ -1,9 +1,18 @@
-import { mkdir, stat } from "node:fs/promises";
+import { access, mkdir, readFile, readdir, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import type { AppPaths } from "../config.js";
 import type { Session } from "./types.js";
 
 const CURRENT_VERSION = 1;
+
+async function fileExists(filePath: string): Promise<boolean> {
+  try {
+    await access(filePath);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 export function slugify(name: string): string {
   return name
@@ -31,12 +40,12 @@ export async function writeSessionFile(filePath: string, session: Session): Prom
   }
 
   await mkdir(path.dirname(filePath), { recursive: true });
-  await Bun.write(filePath, `${JSON.stringify(session, null, 2)}\n`);
+  await writeFile(filePath, `${JSON.stringify(session, null, 2)}\n`, "utf-8");
   return filePath;
 }
 
 export async function readSession(filePath: string): Promise<Session> {
-  const text = await Bun.file(filePath).text();
+  const text = await readFile(filePath, "utf-8");
   const data = JSON.parse(text) as Session;
 
   if (data.version !== CURRENT_VERSION) {
@@ -47,25 +56,22 @@ export async function readSession(filePath: string): Promise<Session> {
 }
 
 export async function listSessions(paths: AppPaths): Promise<string[]> {
-  const glob = new Bun.Glob("*.json");
-
-  const entries: string[] = [];
   try {
-    for await (const file of glob.scan({ cwd: paths.sessions, onlyFiles: true })) {
-      entries.push(path.join(paths.sessions, file));
-    }
+    const files = await readdir(paths.sessions);
+    return files
+      .filter((f) => f.endsWith(".json"))
+      .map((f) => path.join(paths.sessions, f))
+      .sort();
   } catch {
     return [];
   }
-
-  return entries.sort();
 }
 
 async function getAvailableSessionFilePath(directory: string, slug: string): Promise<string> {
   let candidate = path.join(directory, `${slug}.json`);
   let suffix = 2;
 
-  while (await Bun.file(candidate).exists()) {
+  while (await fileExists(candidate)) {
     candidate = path.join(directory, `${slug}-${suffix}.json`);
     suffix += 1;
   }

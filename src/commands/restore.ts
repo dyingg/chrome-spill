@@ -1,3 +1,4 @@
+import { access } from "node:fs/promises";
 import path from "node:path";
 
 import { resolveAppPaths } from "../lib/config.js";
@@ -270,20 +271,29 @@ function summarizeStoredSession(filePath: string, session: Session): StoredSessi
   };
 }
 
+async function fileExists(filePath: string): Promise<boolean> {
+  try {
+    await access(filePath);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 async function resolveSessionFilePath(
   defaultSessionsDirectory: string,
   source: string,
 ): Promise<string | null> {
   const directPath = path.resolve(source);
 
-  if (await Bun.file(directPath).exists()) {
+  if (await fileExists(directPath)) {
     return directPath;
   }
 
   const candidateFileName = source.endsWith(".json") ? source : `${source}.json`;
   const storePath = path.join(defaultSessionsDirectory, candidateFileName);
 
-  if (await Bun.file(storePath).exists()) {
+  if (await fileExists(storePath)) {
     return storePath;
   }
 

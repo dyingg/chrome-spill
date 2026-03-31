@@ -1,3 +1,4 @@
+import { readFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import type { ChromeProfile } from "../../../browser/types.js";
@@ -15,12 +16,9 @@ export async function getProfiles(homeDir = os.homedir()): Promise<ChromeProfile
     "Local State",
   );
 
-  const file = Bun.file(localStatePath);
-  if (!(await file.exists())) return [];
-
   let parsed: unknown;
   try {
-    parsed = JSON.parse(await file.text());
+    parsed = JSON.parse(await readFile(localStatePath, "utf-8"));
   } catch {
     return [];
   }

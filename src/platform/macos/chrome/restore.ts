@@ -71,17 +71,16 @@ export function buildChromeOpenArgs(
 }
 
 async function runOpenCommand(args: string[]): Promise<void> {
-  const process = Bun.spawn(args, {
-    stderr: "pipe",
-    stdout: "pipe",
+  const { execFile } = await import("node:child_process");
+  return new Promise((resolve, reject) => {
+    execFile(args[0], args.slice(1), (error, _stdout, stderr) => {
+      if (error) {
+        const detail = stderr.trim();
+        return reject(
+          new Error(detail.length > 0 ? detail : `open exited with code ${error.code}`),
+        );
+      }
+      resolve();
+    });
   });
-  const [exitCode, stderrText] = await Promise.all([
-    process.exited,
-    new Response(process.stderr).text(),
-  ]);
-
-  if (exitCode !== 0) {
-    const detail = stderrText.trim();
-    throw new Error(detail.length > 0 ? detail : `open exited with code ${exitCode}`);
-  }
 }
