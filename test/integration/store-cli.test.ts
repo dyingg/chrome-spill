@@ -109,7 +109,7 @@ describe("store CLI integration", () => {
     expect(result.code).toBe(0);
 
     const payload = JSON.parse(result.stdout) as { filePath: string; sessionId: string };
-    expect(payload.sessionId).toBe(testWindowId);
+    expect(payload.sessionId).toBe(testWindowId!);
 
     const stored = JSON.parse(await Bun.file(payload.filePath).text()) as Session;
     expect(stored.name.length).toBeGreaterThan(0);
