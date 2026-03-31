@@ -28,28 +28,25 @@ interface SearchCommandDependencies {
 
 interface SearchArguments {
   query: string;
-  top: number;
-  unique: boolean;
+  top: number | undefined;
 }
 
 export const SEARCH_HELP_TEXT = `Usage:
-  chromectx search <query> [--top <n>] [--unique] [--json]
+  chromectx search <query> [--top <n>] [--json]
 
 Search open Chrome tabs by content. Fetches each tab's page source,
-builds a BM25 index, and ranks results by relevance.
+builds a BM25 index, and ranks results by relevance. Duplicate URLs
+are collapsed automatically (highest-scoring chunk wins).
 
 Options:
-  --top <n>   Number of results to show (default: 4)
-  --unique    Show at most one result per page URL
+  --top <n>   Maximum number of results to show (default: all)
   --json      Output results as JSON instead of interactive selection
 
 Examples:
   chromectx search "react hooks"
-  chromectx search "login bug" --top 5 --unique
+  chromectx search "login bug" --top 5
   chromectx search "API docs" --json
 `;
-
-const DEFAULT_TOP = 4;
 
 export const searchCommand: CommandDefinition = {
   description: "Search open Chrome tabs by page content.",
@@ -104,14 +101,13 @@ export async function runSearchCommand(options: SearchCommandOptions): Promise<n
   const rawResults = index.search(parsed.query, index.size);
   options.logger.debug(`Searched ${index.size} chunks in ${elapsed(t0)}`);
 
-  let results = rawResults;
-  if (parsed.unique) {
-    const seen = new Set<string>();
-    results = rawResults.filter((r) => {
-      if (seen.has(r.url)) return false;
-      seen.add(r.url);
-      return true;
-    });
+  const seen = new Set<string>();
+  let results = rawResults.filter((r) => {
+    if (seen.has(r.url)) return false;
+    seen.add(r.url);
+    return true;
+  });
+  if (parsed.top !== undefined) {
     results = results.slice(0, parsed.top);
   }
 
@@ -148,6 +144,7 @@ export async function runSearchCommand(options: SearchCommandOptions): Promise<n
   }));
 
   const selected = await deps.selectOne({
+    maxItems: 10,
     message: `Results for "${parsed.query}"`,
     options: selectOptions,
   });
@@ -160,8 +157,7 @@ export async function runSearchCommand(options: SearchCommandOptions): Promise<n
 
 export function parseSearchArgs(args: string[]): SearchArguments {
   let query: string | undefined;
-  let top = DEFAULT_TOP;
-  let unique = false;
+  let top: number | undefined;
 
   for (let i = 0; i < args.length; i++) {
     const token = args[i];
@@ -173,11 +169,6 @@ export function parseSearchArgs(args: string[]): SearchArguments {
       if (Number.isNaN(n) || n < 1) throw new CliUsageError(`Invalid --top value: ${value}`);
       top = n;
       i += 1;
-      continue;
-    }
-
-    if (token === "--unique") {
-      unique = true;
       continue;
     }
 
@@ -195,7 +186,7 @@ export function parseSearchArgs(args: string[]): SearchArguments {
     throw new CliUsageError("Search query is required. Usage: chromectx search <query>");
   }
 
-  return { query, top, unique };
+  return { query, top };
 }
 
 function truncate(text: string, max: number): string {

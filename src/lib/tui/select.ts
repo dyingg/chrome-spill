@@ -4,6 +4,7 @@ import { CliError } from "../errors.js";
 export type SelectOption<T> = SelectOptions<T>["options"][number];
 
 export async function selectOne<T>(options: {
+  maxItems?: number;
   message: string;
   options: SelectOption<T>[];
 }): Promise<T> {
