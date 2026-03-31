@@ -60,11 +60,12 @@ Do not introduce a deep `core/domain/services` split until the shared runtime lo
 All Chrome interaction goes through JXA (JavaScript for Automation) executed via `osascript -l JavaScript`. The runtime layer lives in `src/platform/macos/chrome/`:
 
 - `jxa.ts` — `runJxa(script)` spawns `osascript` via `Bun.spawn`, returns stdout. Exports the `JxaRunner` function type `(script: string) => Promise<string>`.
-- `sessions.ts` — four public functions, each accepting an optional `JxaRunner` parameter for dependency injection:
+- `sessions.ts` — five public functions, each accepting an optional `JxaRunner` parameter for dependency injection:
   - `getSessions()` → all Chrome windows (id, name, mode, tab count, bounds, active tab index)
   - `getTabsInSession(windowId)` → tabs in one window (id, title, url, loading, active)
   - `getAllTabs()` → every tab across all windows
   - `getSourceForTab(tabId)` → fetches the tab's URL via `fetch()` and returns the HTML. No macOS file permissions or Apple Events JS toggle needed.
+  - `getSourceForSession(windowId, run?, concurrency?)` → fetches HTML for every tab in a window. Makes one JXA call to list tabs, then fetches all URLs concurrently in chunks (default 20). Returns `TabSource[]`.
 - `install.ts` — `detectChromeInstallation()` checks known `.app` paths (no JXA needed).
 
 **ID types**: Chrome window and tab IDs are strings as returned by JXA. All interfaces use `string` for `id`, `windowId`, and `tabId`.
