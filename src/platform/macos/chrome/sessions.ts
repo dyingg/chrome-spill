@@ -1,4 +1,5 @@
 import type { ChromeSession, ChromeTab, TabSource } from "../../../browser/types.js";
+import { fetchSources } from "../../../lib/http.js";
 import { type JxaRunner, runJxa } from "./jxa.js";
 
 // Types are defined in src/browser/types.ts and re-exported here for backward compatibility.
@@ -137,44 +138,27 @@ export async function getAllTabs(run: JxaRunner = runJxa): Promise<ChromeTab[]> 
 export async function getSourceForTab(tabId: string, run: JxaRunner = runJxa): Promise<TabSource> {
   const output = await run(tabMetadataScript(tabId));
   const meta: Omit<TabSource, "html"> = JSON.parse(output);
+  const [source] = await fetchSources([meta]);
 
-  const response = await fetch(meta.url);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch ${meta.url}: ${response.status} ${response.statusText}`);
+  if (!source) {
+    throw new Error(`Failed to fetch source for tab ${tabId} (${meta.url})`);
   }
-  const html = await response.text();
 
-  return { ...meta, html };
+  return source;
 }
 
 /**
  * Returns the HTML source of every tab in a Chrome window.
  *
  * Makes a single JXA call to list tabs, then fetches all URLs concurrently
- * in chunks of `concurrency` (default 20).
+ * via the shared fetchSources pool (default concurrency 15).
  */
 export async function getSourceForSession(
   windowId: string,
   run: JxaRunner = runJxa,
-  concurrency = 20,
 ): Promise<TabSource[]> {
   const tabs = await getTabsInSession(windowId, run);
-  const results: TabSource[] = [];
-
-  for (let i = 0; i < tabs.length; i += concurrency) {
-    const chunk = tabs.slice(i, i + concurrency);
-    const chunkResults = await Promise.all(
-      chunk.map(async (tab) => {
-        const response = await fetch(tab.url);
-        if (!response.ok) {
-          throw new Error(`Failed to fetch ${tab.url}: ${response.status} ${response.statusText}`);
-        }
-        const html = await response.text();
-        return { tabId: tab.id, windowId: tab.windowId, url: tab.url, title: tab.title, html };
-      }),
-    );
-    results.push(...chunkResults);
-  }
-
-  return results;
+  return fetchSources(
+    tabs.map((tab) => ({ tabId: tab.id, windowId: tab.windowId, url: tab.url, title: tab.title })),
+  );
 }
