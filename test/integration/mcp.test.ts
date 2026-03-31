@@ -37,11 +37,10 @@ describe("mcp integration", () => {
 
       expect(toolsResponse.error).toBeUndefined();
       expect(toolsResponse.result).toMatchObject({
-        tools: [
-          expect.objectContaining({
-            name: "doctor",
-          }),
-        ],
+        tools: expect.arrayContaining([
+          expect.objectContaining({ name: "doctor" }),
+          expect.objectContaining({ name: "search_tabs" }),
+        ]),
       });
       expect(server.stderr()).toBe("");
     });

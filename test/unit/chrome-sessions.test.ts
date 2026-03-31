@@ -273,15 +273,14 @@ describe("getSourceForSession", () => {
     expect(sources[4].title).toBe("E");
   });
 
-  test("processes multiple chunks when tabs exceed concurrency", async () => {
+  test("fetches all tabs regardless of count", async () => {
     globalThis.fetch = mock(
       async () => new Response("<html></html>", { status: 200 }),
     ) as unknown as typeof fetch;
 
-    const sources = await getSourceForSession("100", mockRunner(fakeTabs), 2);
+    const sources = await getSourceForSession("100", mockRunner(fakeTabs));
 
     expect(sources).toHaveLength(5);
-    // All tabs should be present regardless of chunking
     expect(sources.map((s) => s.tabId)).toEqual(["1", "2", "3", "4", "5"]);
   });
 
@@ -294,14 +293,15 @@ describe("getSourceForSession", () => {
     expect(sources).toEqual([]);
   });
 
-  test("propagates fetch errors", async () => {
+  test("includes non-2xx responses instead of throwing", async () => {
     globalThis.fetch = mock(
-      async () => new Response("", { status: 500, statusText: "Internal Server Error" }),
+      async () =>
+        new Response("Server Error", { status: 500, statusText: "Internal Server Error" }),
     ) as unknown as typeof fetch;
 
-    await expect(getSourceForSession("100", mockRunner(fakeTabs))).rejects.toThrow(
-      "Failed to fetch https://a.com: 500 Internal Server Error",
-    );
+    const sources = await getSourceForSession("100", mockRunner(fakeTabs));
+    expect(sources.length).toBeGreaterThan(0);
+    expect(sources[0].html).toBe("Server Error");
   });
 
   test("propagates JXA errors (window not found)", async () => {

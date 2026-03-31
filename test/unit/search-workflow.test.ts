@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { parseSearchArgs } from "../../src/commands/search.js";
+import { pMap } from "../../src/lib/concurrent.js";
 import { chunkMarkdown } from "../../src/lib/workflows/search/chunk.js";
 import { buildIndex } from "../../src/lib/workflows/search/index.js";
 import { preprocessHtml } from "../../src/lib/workflows/search/preprocess.js";
@@ -203,5 +204,118 @@ describe("parseSearchArgs", () => {
 
   test("throws on invalid --top value", () => {
     expect(() => parseSearchArgs(["query", "--top", "abc"])).toThrow("Invalid --top value");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// pMap
+// ---------------------------------------------------------------------------
+
+describe("pMap", () => {
+  test("runs items concurrently up to the limit", async () => {
+    let running = 0;
+    let maxRunning = 0;
+
+    const results = await pMap(
+      [1, 2, 3, 4, 5, 6],
+      async (item) => {
+        running++;
+        maxRunning = Math.max(maxRunning, running);
+        await new Promise((r) => setTimeout(r, 10));
+        running--;
+        return item * 2;
+      },
+      2,
+    );
+
+    expect(results).toEqual([2, 4, 6, 8, 10, 12]);
+    expect(maxRunning).toBeLessThanOrEqual(2);
+  });
+
+  test("preserves order", async () => {
+    const results = await pMap(
+      [30, 10, 20],
+      async (ms) => {
+        await new Promise((r) => setTimeout(r, ms));
+        return ms;
+      },
+      3,
+    );
+
+    expect(results).toEqual([30, 10, 20]);
+  });
+
+  test("handles empty input", async () => {
+    const results = await pMap([], async (x: number) => x, 5);
+    expect(results).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// searchWithPages (RAG)
+// ---------------------------------------------------------------------------
+
+describe("searchWithPages", () => {
+  const pages = [
+    {
+      url: "https://react.dev",
+      windowId: "1",
+      tabId: "10",
+      title: "React Docs",
+      html: "<h1>React</h1><p>React is a JavaScript library for building user interfaces.</p><p>Components let you split the UI into independent pieces.</p>",
+    },
+    {
+      url: "https://vue.dev",
+      windowId: "1",
+      tabId: "20",
+      title: "Vue Guide",
+      html: "<h1>Vue</h1><p>Vue is a progressive framework for building user interfaces.</p>",
+    },
+    {
+      url: "https://angular.dev",
+      windowId: "2",
+      tabId: "30",
+      title: "Angular Docs",
+      html: "<h1>Angular</h1><p>Angular is a platform for building mobile and desktop applications.</p>",
+    },
+  ];
+
+  test("returns grouped results with full content", () => {
+    const index = buildIndex(pages, { retainPageContent: true });
+    const results = index.searchWithPages("javascript library user interfaces");
+
+    expect(results.length).toBeGreaterThan(0);
+    expect(results[0].fullContent).toBeTruthy();
+    expect(results[0].chunks.length).toBeGreaterThan(0);
+    expect(typeof results[0].topScore).toBe("number");
+  });
+
+  test("deduplicates chunks from the same page", () => {
+    const index = buildIndex(pages, { retainPageContent: true });
+    const results = index.searchWithPages("react");
+
+    const reactResult = results.find((r) => r.url === "https://react.dev");
+    // Should be a single page entry even if multiple chunks matched
+    const reactCount = results.filter((r) => r.url === "https://react.dev").length;
+    expect(reactCount).toBeLessThanOrEqual(1);
+    if (reactResult) {
+      expect(reactResult.chunks.length).toBeGreaterThan(0);
+    }
+  });
+
+  test("throws when retainPageContent was false", () => {
+    const index = buildIndex(pages);
+    expect(() => index.searchWithPages("react")).toThrow("retainPageContent");
+  });
+
+  test("returns empty for no matches", () => {
+    const index = buildIndex(pages, { retainPageContent: true });
+    const results = index.searchWithPages("xyznonexistent");
+    expect(results).toEqual([]);
+  });
+
+  test("empty index returns empty for searchWithPages", () => {
+    const index = buildIndex([], { retainPageContent: true });
+    expect(index.searchWithPages("anything")).toEqual([]);
   });
 });
