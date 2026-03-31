@@ -79,7 +79,15 @@ export const searchTool: McpTool = {
       };
     }
 
-    const results = index.search(query, top);
+    const rawResults = index.search(query, index.size);
+    const seen = new Set<string>();
+    const results = rawResults
+      .filter((r) => {
+        if (seen.has(r.url)) return false;
+        seen.add(r.url);
+        return true;
+      })
+      .slice(0, top);
     const summary =
       results.length === 0
         ? `No results for "${query}".`
