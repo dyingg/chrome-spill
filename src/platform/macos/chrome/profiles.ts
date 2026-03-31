@@ -10,9 +10,7 @@ export interface ChromeProfile {
   userName: string;
 }
 
-export async function getProfiles(
-  homeDir = os.homedir(),
-): Promise<ChromeProfile[]> {
+export async function getProfiles(homeDir = os.homedir()): Promise<ChromeProfile[]> {
   const localStatePath = path.join(
     homeDir,
     "Library",
@@ -35,9 +33,7 @@ export async function getProfiles(
   const infoCache = (parsed as Record<string, unknown>)?.profile as
     | Record<string, unknown>
     | undefined;
-  const cache = infoCache?.info_cache as
-    | Record<string, Record<string, unknown>>
-    | undefined;
+  const cache = infoCache?.info_cache as Record<string, Record<string, unknown>> | undefined;
   if (!cache || typeof cache !== "object") return [];
 
   return Object.entries(cache).map(([directoryName, entry]) => ({
