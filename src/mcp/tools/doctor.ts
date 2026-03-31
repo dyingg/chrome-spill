@@ -4,10 +4,7 @@ import { getMacOSDoctorSnapshot } from "../../platform/macos/index.js";
 
 export interface McpTool {
   description: string;
-  execute(
-    args: Record<string, unknown>,
-    env: NodeJS.ProcessEnv,
-  ): Promise<Record<string, unknown>>;
+  execute(args: Record<string, unknown>, env: NodeJS.ProcessEnv): Promise<Record<string, unknown>>;
   inputSchema: Record<string, unknown>;
   name: string;
   title: string;

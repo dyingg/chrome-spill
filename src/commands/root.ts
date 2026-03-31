@@ -1,7 +1,7 @@
-import { APP_NAME, APP_VERSION } from "../lib/meta.js";
 import { CliUsageError, errorToExitCode, formatError } from "../lib/errors.js";
-import { createOutput } from "../lib/output.js";
 import { createLogger } from "../lib/logger.js";
+import { APP_NAME, APP_VERSION } from "../lib/meta.js";
+import { createOutput } from "../lib/output.js";
 import { assertMacOS } from "../platform/guard.js";
 import { runDoctorCommand } from "./doctor.js";
 import { runMcpCommand } from "./mcp.js";
@@ -45,7 +45,10 @@ Examples:
   ${APP_NAME} mcp
 `;
 
-export async function runCli(argv: string[], env: NodeJS.ProcessEnv = process.env): Promise<number> {
+export async function runCli(
+  argv: string[],
+  env: NodeJS.ProcessEnv = process.env,
+): Promise<number> {
   const output = createOutput();
 
   try {

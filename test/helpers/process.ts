@@ -3,22 +3,15 @@ import path from "node:path";
 
 const REPO_ROOT = path.resolve(import.meta.dir, "..", "..");
 
-export function spawnCli(
-  args: string[],
-  options: { env?: NodeJS.ProcessEnv } = {},
-) {
-  return spawn(
-    process.execPath,
-    ["run", "src/bin/cli.ts", ...args],
-    {
-      cwd: REPO_ROOT,
-      env: {
-        ...process.env,
-        ...options.env,
-      },
-      stdio: ["pipe", "pipe", "pipe"],
+export function spawnCli(args: string[], options: { env?: NodeJS.ProcessEnv } = {}) {
+  return spawn(process.execPath, ["run", "src/bin/cli.ts", ...args], {
+    cwd: REPO_ROOT,
+    env: {
+      ...process.env,
+      ...options.env,
     },
-  );
+    stdio: ["pipe", "pipe", "pipe"],
+  });
 }
 
 export async function waitForExit(
@@ -38,9 +31,11 @@ export async function waitForExit(
     stderr += chunk;
   });
 
-  const result = await new Promise<{ code: number | null; signal: NodeJS.Signals | null }>((resolve) => {
-    child.on("close", (code, signal) => resolve({ code, signal }));
-  });
+  const result = await new Promise<{ code: number | null; signal: NodeJS.Signals | null }>(
+    (resolve) => {
+      child.on("close", (code, signal) => resolve({ code, signal }));
+    },
+  );
 
   return {
     ...result,

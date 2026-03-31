@@ -18,10 +18,7 @@ export class UnsupportedPlatformError extends CliError {
   readonly platform: string;
 
   constructor(platform: string) {
-    super(
-      `chrome-spill only runs on macOS. Detected platform: ${platform}.`,
-      1,
-    );
+    super(`chrome-spill only runs on macOS. Detected platform: ${platform}.`, 1);
     this.platform = platform;
   }
 }

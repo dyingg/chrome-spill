@@ -1,6 +1,6 @@
-import { APP_NAME, APP_VERSION, MCP_PROTOCOL_VERSION } from "../lib/meta.js";
 import { CliUsageError } from "../lib/errors.js";
 import type { Logger } from "../lib/logger.js";
+import { APP_NAME, APP_VERSION, MCP_PROTOCOL_VERSION } from "../lib/meta.js";
 import { resolveDoctorTool, tools } from "./tools/index.js";
 
 type JsonRpcId = number | string | null;
@@ -142,7 +142,8 @@ async function handleRequest(
             name: APP_NAME,
             version: APP_VERSION,
           },
-          instructions: "Use tools/list to discover available tools. This server is local, macOS-only, and expects newline-delimited JSON-RPC on stdio.",
+          instructions:
+            "Use tools/list to discover available tools. This server is local, macOS-only, and expects newline-delimited JSON-RPC on stdio.",
         },
       };
     case "ping":
@@ -179,7 +180,7 @@ async function handleRequest(
 
       const result = await tool.execute(
         typeof request.params?.arguments === "object" && request.params?.arguments
-          ? request.params.arguments as Record<string, unknown>
+          ? (request.params.arguments as Record<string, unknown>)
           : {},
         context.env,
       );

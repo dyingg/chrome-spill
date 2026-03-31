@@ -1,7 +1,6 @@
 import os from "node:os";
-
-import { UnsupportedPlatformError } from "../lib/errors.js";
 import { TEST_PLATFORM_ENV } from "../lib/env.js";
+import { UnsupportedPlatformError } from "../lib/errors.js";
 
 export interface RuntimePlatform {
   arch: string;

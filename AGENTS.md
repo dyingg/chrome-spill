@@ -39,3 +39,10 @@ Do not introduce a deep `core/domain/services` split until the shared runtime lo
 - Prefer integration tests that spawn the CLI or MCP server as subprocesses and assert stdout, stderr, and exit codes.
 - Do not make the default test suite depend on a live Chrome session or real macOS permissions prompts.
 - If end-to-end Chrome automation is added later, keep it in a separate opt-in test layer.
+
+## Linting and formatting
+
+- Use Biome as the repo's formatter and linter.
+- Prefer `bun run lint` for CI-grade verification and `bun run lint:fix` for safe autofixes.
+- Prefer `bun run format` only when you explicitly want formatting-only changes.
+- Keep configuration in the repo root `biome.json`.
