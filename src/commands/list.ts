@@ -177,14 +177,16 @@ function renderSessionsTable(sessions: ChromeSession[]): string {
   return renderTable(["ID", "MODE", "TABS", "ACTIVE", "NAME"], rows);
 }
 
+function truncate(text: string, max: number): string {
+  return text.length > max ? `${text.slice(0, max - 1)}…` : text;
+}
+
 function renderTabsTable(tabs: ChromeTab[]): string {
   const rows = tabs.map((tab) => [
-    String(tab.index),
-    tab.active ? "*" : "",
-    tab.id,
-    tab.title,
-    tab.url,
+    tab.active ? `* ${tab.index}` : `  ${tab.index}`,
+    truncate(tab.title, 50),
+    truncate(tab.url, 60),
   ]);
 
-  return renderTable(["IDX", "ACTIVE", "ID", "TITLE", "URL"], rows);
+  return renderTable(["#", "TITLE", "URL"], rows);
 }
