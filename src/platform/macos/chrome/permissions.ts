@@ -20,7 +20,8 @@ export async function checkAutomationPermission(
     return { permitted: true, status: "granted", detail: null };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    const denied = message.includes("-1743") || message.includes("Not authorized to send Apple events");
+    const denied =
+      message.includes("-1743") || message.includes("Not authorized to send Apple events");
     return {
       permitted: false,
       status: denied ? "denied" : "unknown",

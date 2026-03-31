@@ -3,8 +3,8 @@ import type { RuntimePlatform } from "../guard.js";
 import {
   type AutomationPermission,
   checkAutomationPermission,
-  type JxaRunner,
   detectChromeInstallation,
+  type JxaRunner,
 } from "./chrome/index.js";
 import { runJxa } from "./chrome/jxa.js";
 

@@ -46,9 +46,7 @@ describe("checkAutomationPermission", () => {
   });
 
   test("returns unknown for unexpected errors", async () => {
-    const result = await checkAutomationPermission(
-      failingRunner("osascript: command not found"),
-    );
+    const result = await checkAutomationPermission(failingRunner("osascript: command not found"));
     expect(result.permitted).toBe(false);
     expect(result.status).toBe("unknown");
     expect(result.detail).toContain("osascript");
