@@ -53,7 +53,7 @@ Do not introduce a deep `core/domain/services` split until the shared runtime lo
 - Prefer unit tests for pure logic in `src/lib` and argument parsing.
 - Prefer integration tests that spawn the CLI or MCP server as subprocesses and assert stdout, stderr, and exit codes.
 - `bun run test` runs all tests including Chrome integration tests. `bun run test:unit` runs only fast unit tests with no external dependencies.
-- Chrome integration tests (`test/integration/chrome.test.ts`) open and close their own Chrome window. They do **not** touch pre-existing windows. These tests require Chrome to be installed and "Allow JavaScript from Apple Events" enabled (View → Developer). If that setup is unavailable, they degrade to a no-op path instead of failing unrelated CLI work.
+- Chrome integration tests (`test/integration/chrome.test.ts`) open and close their own Chrome window. They do **not** touch pre-existing windows. These tests require Chrome to be installed. If Chrome is unavailable, they degrade to a no-op path instead of failing unrelated CLI work.
 
 ## Chrome infrastructure
 
@@ -64,7 +64,7 @@ All Chrome interaction goes through JXA (JavaScript for Automation) executed via
   - `getSessions()` → all Chrome windows (id, name, mode, tab count, bounds, active tab index)
   - `getTabsInSession(windowId)` → tabs in one window (id, title, url, loading, active)
   - `getAllTabs()` → every tab across all windows
-  - `getSourceForTab(tabId)` → saves the tab to a temp file via Chrome's `save` command, reads it back, then cleans up. No special permissions needed.
+  - `getSourceForTab(tabId)` → fetches the tab's URL via `fetch()` and returns the HTML. No macOS file permissions or Apple Events JS toggle needed.
 - `install.ts` — `detectChromeInstallation()` checks known `.app` paths (no JXA needed).
 
 **ID types**: Chrome window and tab IDs are strings as returned by JXA. All interfaces use `string` for `id`, `windowId`, and `tabId`.

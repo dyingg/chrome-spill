@@ -1,5 +1,4 @@
-import { describe, expect, test } from "bun:test";
-import { writeFileSync } from "node:fs";
+import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test";
 import type { JxaRunner } from "../../src/platform/macos/chrome/jxa.js";
 import {
   getAllTabs,
@@ -164,24 +163,28 @@ describe("getAllTabs", () => {
 // ---------------------------------------------------------------------------
 
 describe("getSourceForTab", () => {
-  test("returns HTML source for a tab", async () => {
-    const fakeHtml =
-      "<html><head><title>Example Domain</title></head><body><h1>Example</h1></body></html>";
+  const originalFetch = globalThis.fetch;
 
-    // Mock runner that writes the HTML to the temp file Chrome would have saved to,
-    // then returns tab metadata JSON like the real JXA script does.
-    const saveRunner: JxaRunner = async (script) => {
-      const match = script.match(/Path\("([^"]+)"\)/);
-      if (match) writeFileSync(match[1], fakeHtml);
-      return JSON.stringify({
+  beforeEach(() => {
+    globalThis.fetch = mock(
+      async () => new Response("<html><body><h1>Example</h1></body></html>", { status: 200 }),
+    ) as typeof fetch;
+  });
+
+  afterEach(() => {
+    globalThis.fetch = originalFetch;
+  });
+
+  test("returns HTML source for a tab", async () => {
+    const source = await getSourceForTab(
+      "10",
+      mockRunner({
         tabId: "10",
         windowId: "100",
         url: "https://example.com",
         title: "Example Domain",
-      });
-    };
-
-    const source = await getSourceForTab("10", saveRunner);
+      }),
+    );
 
     expect(source.tabId).toBe("10");
     expect(source.url).toBe("https://example.com");

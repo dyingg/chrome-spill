@@ -5,8 +5,8 @@ import { type JxaRunner, runJxa } from "./jxa.js";
 // ---------------------------------------------------------------------------
 
 export interface ChromeSession {
-  /** Chrome-internal window id. */
-  id: number;
+  /** Chrome-internal window id (string as returned by JXA). */
+  id: string;
   /** Window title (usually the active tab's title). */
   name: string;
   /** "normal" or "incognito". */
@@ -21,9 +21,9 @@ export interface ChromeSession {
 
 export interface ChromeTab {
   /** Chrome-internal tab id (unique across all windows). */
-  id: number;
+  id: string;
   /** The window this tab belongs to. */
-  windowId: number;
+  windowId: string;
   /** 0-based position within its window. */
   index: number;
   title: string;
@@ -34,8 +34,8 @@ export interface ChromeTab {
 }
 
 export interface TabSource {
-  tabId: number;
-  windowId: number;
+  tabId: string;
+  windowId: string;
   url: string;
   title: string;
   /** Full outer HTML of the document element. */
@@ -89,13 +89,13 @@ const GET_ALL_TABS_SCRIPT = `(() => {
   return JSON.stringify(result);
 })()`;
 
-function tabsInSessionScript(windowId: number): string {
+function tabsInSessionScript(windowId: string): string {
   return `(() => {
   const chrome = Application("Google Chrome");
   const winCount = chrome.windows.length;
   for (let i = 0; i < winCount; i++) {
     const w = chrome.windows[i];
-    if (w.id() === ${windowId}) {
+    if (w.id() === "${windowId}") {
       const tabs = [];
       const tabCount = w.tabs.length;
       const activeIdx = w.activeTabIndex();
@@ -118,7 +118,7 @@ function tabsInSessionScript(windowId: number): string {
 })()`;
 }
 
-function sourceForTabScript(tabId: number): string {
+function tabMetadataScript(tabId: string): string {
   return `(() => {
   const chrome = Application("Google Chrome");
   const winCount = chrome.windows.length;
@@ -127,14 +127,12 @@ function sourceForTabScript(tabId: number): string {
     const tabCount = w.tabs.length;
     for (let j = 0; j < tabCount; j++) {
       const t = w.tabs[j];
-      if (t.id() === ${tabId}) {
-        const html = t.execute({ javascript: "document.documentElement.outerHTML" });
+      if (t.id() === "${tabId}") {
         return JSON.stringify({
-          tabId: ${tabId},
+          tabId: t.id(),
           windowId: w.id(),
           url: t.url(),
-          title: t.title(),
-          html: html
+          title: t.title()
         });
       }
     }
@@ -155,7 +153,7 @@ export async function getSessions(run: JxaRunner = runJxa): Promise<ChromeSessio
 
 /** Returns all tabs in a specific Chrome window. */
 export async function getTabsInSession(
-  windowId: number,
+  windowId: string,
   run: JxaRunner = runJxa,
 ): Promise<ChromeTab[]> {
   const output = await run(tabsInSessionScript(windowId));
@@ -169,12 +167,20 @@ export async function getAllTabs(run: JxaRunner = runJxa): Promise<ChromeTab[]> 
 }
 
 /**
- * Returns the full HTML source of a tab identified by its Chrome-internal tab id.
+ * Returns the HTML source of a tab identified by its Chrome-internal tab id.
  *
- * Requires "Allow JavaScript from Apple Events" to be enabled in Chrome
- * (View → Developer → Allow JavaScript from Apple Events).
+ * Fetches the tab's URL directly — no macOS file permissions or
+ * "Allow JavaScript from Apple Events" needed.
  */
-export async function getSourceForTab(tabId: number, run: JxaRunner = runJxa): Promise<TabSource> {
-  const output = await run(sourceForTabScript(tabId));
-  return JSON.parse(output);
+export async function getSourceForTab(tabId: string, run: JxaRunner = runJxa): Promise<TabSource> {
+  const output = await run(tabMetadataScript(tabId));
+  const meta: Omit<TabSource, "html"> = JSON.parse(output);
+
+  const response = await fetch(meta.url);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch ${meta.url}: ${response.status} ${response.statusText}`);
+  }
+  const html = await response.text();
+
+  return { ...meta, html };
 }
