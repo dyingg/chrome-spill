@@ -4,7 +4,7 @@ import type { Logger } from "../lib/logger.js";
 import type { Output } from "../lib/output.js";
 import { isInteractiveTerminal } from "../lib/terminal.js";
 import { type SelectOption, selectOne } from "../lib/tui/select.js";
-import { type SearchResult, buildIndex } from "../lib/workflows/search/index.js";
+import { buildIndex, type SearchResult } from "../lib/workflows/search/index.js";
 import { focusTab, getAllTabs } from "../platform/macos/chrome/index.js";
 
 interface SearchCommandOptions {
@@ -30,7 +30,7 @@ interface SearchArguments {
   top: number;
 }
 
-const SEARCH_HELP_TEXT = `Usage:
+export const SEARCH_HELP_TEXT = `Usage:
   chrome-spill search <query> [--top <n>] [--json]
 
 Search open Chrome tabs by content. Fetches each tab's page source,

@@ -4,6 +4,19 @@ import type { Output } from "../lib/output.js";
 import { getRuntimePlatform } from "../platform/guard.js";
 import { getMacOSDoctorSnapshot } from "../platform/macos/index.js";
 
+export const DOCTOR_HELP_TEXT = `Usage:
+  chrome-spill doctor [--json]
+
+Inspect the local runtime and report macOS-specific readiness.
+
+Options:
+  --json    Output the doctor report as JSON
+
+Examples:
+  chrome-spill doctor
+  chrome-spill doctor --json
+`;
+
 interface DoctorCommandOptions {
   env: NodeJS.ProcessEnv;
   json: boolean;

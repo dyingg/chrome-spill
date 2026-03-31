@@ -50,7 +50,7 @@ interface StoredSessionSummary {
   windowCount: number;
 }
 
-const RESTORE_HELP_TEXT = `Usage:
+export const RESTORE_HELP_TEXT = `Usage:
   chrome-spill restore [saved-session-or-file] [--profile <directory>] [--json]
 
 Examples:

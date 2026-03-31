@@ -37,7 +37,7 @@ interface SaveArguments {
   sessionId?: string;
 }
 
-const SAVE_HELP_TEXT = `Usage:
+export const SAVE_HELP_TEXT = `Usage:
   chrome-spill save [session-id] [--output <file>] [--json]
   chrome-spill save session [session-id] [--output <file>] [--json]
 

@@ -3,12 +3,12 @@ import { createLogger } from "../lib/logger.js";
 import { APP_NAME, APP_VERSION } from "../lib/meta.js";
 import { createOutput } from "../lib/output.js";
 import { assertMacOS } from "../platform/guard.js";
-import { runDoctorCommand } from "./doctor.js";
-import { runListCommand } from "./list.js";
-import { runMcpCommand } from "./mcp.js";
-import { runRestoreCommand } from "./restore.js";
-import { runSaveCommand } from "./save.js";
-import { runSearchCommand } from "./search.js";
+import { DOCTOR_HELP_TEXT, runDoctorCommand } from "./doctor.js";
+import { LIST_HELP_TEXT, runListCommand } from "./list.js";
+import { MCP_HELP_TEXT, runMcpCommand } from "./mcp.js";
+import { RESTORE_HELP_TEXT, runRestoreCommand } from "./restore.js";
+import { runSaveCommand, SAVE_HELP_TEXT } from "./save.js";
+import { runSearchCommand, SEARCH_HELP_TEXT } from "./search.js";
 
 type CommandName = "doctor" | "list" | "mcp" | "restore" | "save" | "search";
 
@@ -73,8 +73,10 @@ export async function runCli(
       quiet: parsed.flags.quiet,
       verbose: parsed.flags.verbose,
     });
+    const commandHelpRequested =
+      parsed.command !== undefined && (parsed.flags.help || parsed.commandArgs[0] === "help");
 
-    if (parsed.flags.help) {
+    if (parsed.flags.help && !parsed.command) {
       output.stdout(HELP_TEXT);
       return 0;
     }
@@ -86,6 +88,11 @@ export async function runCli(
 
     if (!parsed.command) {
       output.stdout(HELP_TEXT);
+      return 0;
+    }
+
+    if (commandHelpRequested) {
+      output.stdout(getCommandHelpText(parsed.command));
       return 0;
     }
 
@@ -234,4 +241,23 @@ export function parseCliArgs(argv: string[]): ParsedArgs {
     commandArgs: normalizedPositionals,
     flags,
   };
+}
+
+function getCommandHelpText(command: CommandName): string {
+  switch (command) {
+    case "doctor":
+      return DOCTOR_HELP_TEXT;
+    case "list":
+      return LIST_HELP_TEXT;
+    case "mcp":
+      return MCP_HELP_TEXT;
+    case "restore":
+      return RESTORE_HELP_TEXT;
+    case "save":
+      return SAVE_HELP_TEXT;
+    case "search":
+      return SEARCH_HELP_TEXT;
+    default:
+      return HELP_TEXT;
+  }
 }

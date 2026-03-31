@@ -28,7 +28,7 @@ interface ListCommandDependencies {
   selectOne: typeof selectOne;
 }
 
-const LIST_HELP_TEXT = `Usage:
+export const LIST_HELP_TEXT = `Usage:
   chrome-spill list sessions [--json]
   chrome-spill list tabs <session-id> [--json]
   chrome-spill list tabs

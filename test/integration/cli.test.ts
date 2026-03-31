@@ -13,6 +13,26 @@ describe("cli integration", () => {
     expect(result.stderr).toBe("");
   });
 
+  test("shows command-specific help for save --help", async () => {
+    const child = spawnCli(["save", "--help"]);
+    const result = await waitForExit(child);
+
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain("chrome-spill save [session-id]");
+    expect(result.stdout).not.toContain("chrome-spill mcp");
+    expect(result.stderr).toBe("");
+  });
+
+  test("shows command-specific help for doctor help", async () => {
+    const child = spawnCli(["doctor", "help"]);
+    const result = await waitForExit(child);
+
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain("chrome-spill doctor [--json]");
+    expect(result.stdout).not.toContain("chrome-spill list tabs");
+    expect(result.stderr).toBe("");
+  });
+
   test("prints a structured doctor report on macOS", async () => {
     const child = spawnCli(["doctor", "--json"]);
     const result = await waitForExit(child);
