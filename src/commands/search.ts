@@ -71,7 +71,10 @@ const defaultDependencies: SearchCommandDependencies = {
 export async function runSearchCommand(options: SearchCommandOptions): Promise<number> {
   const deps = options.deps ?? defaultDependencies;
   const parsed = parseSearchArgs(options.args);
+
+  let t0 = performance.now();
   const tabs = await deps.getAllTabs();
+  options.logger.debug(`Listed ${tabs.length} tab(s) in ${elapsed(t0)}`);
 
   if (tabs.length === 0) {
     options.output.stdout("No open Chrome tabs found.");
@@ -80,10 +83,12 @@ export async function runSearchCommand(options: SearchCommandOptions): Promise<n
 
   options.logger.info(`Fetching content from ${tabs.length} tab(s)…`);
 
+  t0 = performance.now();
   const pages = await deps.fetchSources(
     tabs.map((tab) => ({ url: tab.url, windowId: tab.windowId, tabId: tab.id, title: tab.title })),
     { logger: options.logger },
   );
+  options.logger.debug(`Fetched ${pages.length} page(s) in ${elapsed(t0)}`);
 
   if (pages.length === 0) {
     options.output.stdout("Could not fetch content from any tabs.");
@@ -91,9 +96,14 @@ export async function runSearchCommand(options: SearchCommandOptions): Promise<n
   }
 
   options.logger.info(`Indexing ${pages.length} page(s)…`);
+  t0 = performance.now();
   const index = deps.buildIndex(pages);
+  options.logger.debug(`Built index (${index.size} chunks) in ${elapsed(t0)}`);
 
-  const rawResults = index.search(parsed.query, parsed.unique ? index.size : parsed.top);
+  t0 = performance.now();
+  const rawResults = index.search(parsed.query, index.size);
+  options.logger.debug(`Searched ${index.size} chunks in ${elapsed(t0)}`);
+
   let results = rawResults;
   if (parsed.unique) {
     const seen = new Set<string>();
@@ -190,4 +200,9 @@ export function parseSearchArgs(args: string[]): SearchArguments {
 
 function truncate(text: string, max: number): string {
   return text.length > max ? `${text.slice(0, max - 1)}…` : text;
+}
+
+function elapsed(startMs: number): string {
+  const ms = performance.now() - startMs;
+  return ms >= 1000 ? `${(ms / 1000).toFixed(2)}s` : `${Math.round(ms)}ms`;
 }
