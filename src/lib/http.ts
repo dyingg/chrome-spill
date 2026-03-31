@@ -2,7 +2,7 @@ import type { TabSource } from "../browser/types.js";
 import { pMap } from "./concurrent.js";
 import type { Logger } from "./logger.js";
 
-const DEFAULT_CONCURRENCY = 15;
+const DEFAULT_CONCURRENCY = 50;
 
 interface FetchSourcesOptions {
   concurrency?: number;

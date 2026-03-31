@@ -151,7 +151,7 @@ export async function getSourceForTab(tabId: string, run: JxaRunner = runJxa): P
  * Returns the HTML source of every tab in a Chrome window.
  *
  * Makes a single JXA call to list tabs, then fetches all URLs concurrently
- * via the shared fetchSources pool (default concurrency 15).
+ * via the shared fetchSources pool (default concurrency 50).
  */
 export async function getSourceForSession(
   windowId: string,
