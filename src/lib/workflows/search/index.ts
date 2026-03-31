@@ -1,6 +1,6 @@
-import type { TabSource } from "../../../browser/types.js";
 import bm25 from "wink-bm25-text-search";
 import nlp from "wink-nlp-utils";
+import type { TabSource } from "../../../browser/types.js";
 import { chunkMarkdown } from "./chunk.js";
 import { preprocessHtml } from "./preprocess.js";
 import type { IndexedChunk, RagChunkMatch, RagSearchResult, SearchResult } from "./types.js";
@@ -102,7 +102,12 @@ export function buildIndex(pages: TabSource[], options?: BuildIndexOptions): Sea
     return {
       search: searchFn,
       searchWithPages: (query, topK) =>
-        groupByPage(searchFn(query, topK === undefined ? undefined : topK * 10), pageMarkdowns, retainContent, topK),
+        groupByPage(
+          searchFn(query, topK === undefined ? undefined : topK * 10),
+          pageMarkdowns,
+          retainContent,
+          topK,
+        ),
       size: chunks.length,
     };
   }

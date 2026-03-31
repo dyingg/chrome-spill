@@ -45,7 +45,12 @@ export const searchTool: McpTool = {
     }
 
     const pages = await fetchSources(
-      tabs.map((tab) => ({ url: tab.url, windowId: tab.windowId, tabId: tab.id, title: tab.title })),
+      tabs.map((tab) => ({
+        url: tab.url,
+        windowId: tab.windowId,
+        tabId: tab.id,
+        title: tab.title,
+      })),
     );
 
     if (pages.length === 0) {
@@ -58,9 +63,15 @@ export const searchTool: McpTool = {
 
     if (returnFullSite) {
       const results = index.searchWithPages(query, top);
-      const summary = results.length === 0
-        ? `No results for "${query}".`
-        : results.map((r) => `${r.title} — ${r.url} (${r.chunks.length} chunks, top score: ${r.topScore})`).join("\n");
+      const summary =
+        results.length === 0
+          ? `No results for "${query}".`
+          : results
+              .map(
+                (r) =>
+                  `${r.title} — ${r.url} (${r.chunks.length} chunks, top score: ${r.topScore})`,
+              )
+              .join("\n");
 
       return {
         content: [{ type: "text", text: summary }],
@@ -69,9 +80,10 @@ export const searchTool: McpTool = {
     }
 
     const results = index.search(query, top);
-    const summary = results.length === 0
-      ? `No results for "${query}".`
-      : results.map((r) => `${r.title} — ${r.url} (score: ${r.score})`).join("\n");
+    const summary =
+      results.length === 0
+        ? `No results for "${query}".`
+        : results.map((r) => `${r.title} — ${r.url} (score: ${r.score})`).join("\n");
 
     return {
       content: [{ type: "text", text: summary }],
