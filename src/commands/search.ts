@@ -50,11 +50,11 @@ Examples:
 const DEFAULT_TOP = 4;
 
 export const searchCommand: CommandDefinition = {
-	description: "Search open Chrome tabs by page content.",
-	helpText: SEARCH_HELP_TEXT,
-	examples: ['search "react hooks"'],
-	run: ({ args, env, flags, logger, output }) =>
-		runSearchCommand({ args, env, json: flags.json, logger, output }),
+  description: "Search open Chrome tabs by page content.",
+  helpText: SEARCH_HELP_TEXT,
+  examples: ['search "react hooks"'],
+  run: ({ args, env, flags, logger, output }) =>
+    runSearchCommand({ args, env, json: flags.json, logger, output }),
 };
 
 const defaultDependencies: SearchCommandDependencies = {

@@ -49,12 +49,12 @@ Examples:
 `;
 
 export const saveCommand: CommandDefinition = {
-	description: "Save Chrome sessions into the store format.",
-	helpText: SAVE_HELP_TEXT,
-	aliases: ["dump"],
-	examples: ["save", "save 123"],
-	run: ({ args, env, flags, logger, output }) =>
-		runSaveCommand({ args, env, json: flags.json, logger, output }),
+  description: "Save Chrome sessions into the store format.",
+  helpText: SAVE_HELP_TEXT,
+  aliases: ["dump"],
+  examples: ["save", "save 123"],
+  run: ({ args, env, flags, logger, output }) =>
+    runSaveCommand({ args, env, json: flags.json, logger, output }),
 };
 
 const defaultDependencies: SaveCommandDependencies = {

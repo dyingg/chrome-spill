@@ -67,16 +67,14 @@ export async function runDoctorCommand(options: DoctorCommandOptions): Promise<n
 }
 
 export const doctorCommand: CommandDefinition = {
-	description: "Inspect the local runtime and report macOS-specific readiness.",
-	helpText: DOCTOR_HELP_TEXT,
-	examples: ["doctor", "doctor --json"],
-	run: async ({ args, env, flags, logger, output }) => {
-		if (args.length > 0) {
-			throw new CliUsageError(
-				`Unexpected arguments for doctor: ${args.join(" ")}`,
-			);
-		}
+  description: "Inspect the local runtime and report macOS-specific readiness.",
+  helpText: DOCTOR_HELP_TEXT,
+  examples: ["doctor", "doctor --json"],
+  run: async ({ args, env, flags, logger, output }) => {
+    if (args.length > 0) {
+      throw new CliUsageError(`Unexpected arguments for doctor: ${args.join(" ")}`);
+    }
 
-		return await runDoctorCommand({ env, json: flags.json, logger, output });
-	},
+    return await runDoctorCommand({ env, json: flags.json, logger, output });
+  },
 };

@@ -12,41 +12,37 @@ import { searchCommand } from "./search.js";
 import type { CommandDefinition, GlobalFlags } from "./types.js";
 
 const COMMANDS = {
-	doctor: doctorCommand,
-	list: listCommand,
-	mcp: mcpCommand,
-	restore: restoreCommand,
-	save: saveCommand,
-	search: searchCommand,
+  doctor: doctorCommand,
+  list: listCommand,
+  mcp: mcpCommand,
+  restore: restoreCommand,
+  save: saveCommand,
+  search: searchCommand,
 } as const satisfies Record<string, CommandDefinition>;
 
 type CommandName = keyof typeof COMMANDS;
 
 const COMMAND_ALIASES = new Map<string, CommandName>(
-	Object.entries(COMMANDS).flatMap(([name, def]) =>
-		(def.aliases ?? []).map(
-			(alias) => [alias, name] as [string, CommandName],
-		),
-	),
+  Object.entries(COMMANDS).flatMap(([name, def]) =>
+    (def.aliases ?? []).map((alias) => [alias, name] as [string, CommandName]),
+  ),
 );
 
 function resolveCommand(token: string): CommandName | undefined {
-	if (token in COMMANDS) return token as CommandName;
-	return COMMAND_ALIASES.get(token);
+  if (token in COMMANDS) return token as CommandName;
+  return COMMAND_ALIASES.get(token);
 }
 
 function buildRootHelpText(): string {
-	const commandLines = Object.entries(COMMANDS)
-		.map(([name, def]) => `  ${name.padEnd(10)}${def.description}`)
-		.join("\n");
+  const commandLines = Object.entries(COMMANDS)
+    .map(([name, def]) => `  ${name.padEnd(10)}${def.description}`)
+    .join("\n");
 
-	const exampleLines = Object.entries(COMMANDS)
-		.flatMap(([, def]) =>
-			(def.examples ?? []).map((ex) => `  ${APP_NAME} ${ex}`),
-		)
-		.join("\n");
+  const exampleLines = Object.entries(COMMANDS)
+    .flatMap(([, def]) => (def.examples ?? []).map((ex) => `  ${APP_NAME} ${ex}`))
+    .join("\n");
 
-	return `${APP_NAME} is a macOS-only CLI and local stdio MCP server.
+  return `${APP_NAME} is a macOS-only CLI and local stdio MCP server.
 
 Usage:
   ${APP_NAME} [global flags] <command> [args]
@@ -70,136 +66,131 @@ ${exampleLines}
 const HELP_TEXT = buildRootHelpText();
 
 interface ParsedArgs {
-	command?: CommandName;
-	commandArgs: string[];
-	flags: GlobalFlags;
+  command?: CommandName;
+  commandArgs: string[];
+  flags: GlobalFlags;
 }
 
 export async function runCli(
-	argv: string[],
-	env: NodeJS.ProcessEnv = process.env,
+  argv: string[],
+  env: NodeJS.ProcessEnv = process.env,
 ): Promise<number> {
-	const output = createOutput();
+  const output = createOutput();
 
-	try {
-		const parsed = parseCliArgs(argv);
-		const logger = createLogger({
-			quiet: parsed.flags.quiet,
-			verbose: parsed.flags.verbose,
-		});
-		const commandHelpRequested =
-			parsed.command !== undefined &&
-			(parsed.flags.help || parsed.commandArgs[0] === "help");
+  try {
+    const parsed = parseCliArgs(argv);
+    const logger = createLogger({
+      quiet: parsed.flags.quiet,
+      verbose: parsed.flags.verbose,
+    });
+    const commandHelpRequested =
+      parsed.command !== undefined && (parsed.flags.help || parsed.commandArgs[0] === "help");
 
-		if (parsed.flags.help && !parsed.command) {
-			output.stdout(HELP_TEXT);
-			return 0;
-		}
+    if (parsed.flags.help && !parsed.command) {
+      output.stdout(HELP_TEXT);
+      return 0;
+    }
 
-		if (parsed.flags.version) {
-			output.stdout(APP_VERSION);
-			return 0;
-		}
+    if (parsed.flags.version) {
+      output.stdout(APP_VERSION);
+      return 0;
+    }
 
-		if (!parsed.command) {
-			output.stdout(HELP_TEXT);
-			return 0;
-		}
+    if (!parsed.command) {
+      output.stdout(HELP_TEXT);
+      return 0;
+    }
 
-		if (commandHelpRequested) {
-			output.stdout(COMMANDS[parsed.command].helpText);
-			return 0;
-		}
+    if (commandHelpRequested) {
+      output.stdout(COMMANDS[parsed.command].helpText);
+      return 0;
+    }
 
-		assertMacOS({ env });
+    assertMacOS({ env });
 
-		return await COMMANDS[parsed.command].run({
-			args: parsed.commandArgs,
-			env,
-			flags: parsed.flags,
-			logger,
-			output,
-		});
-	} catch (error) {
-		output.stderr(formatError(error));
-		return errorToExitCode(error);
-	}
+    return await COMMANDS[parsed.command].run({
+      args: parsed.commandArgs,
+      env,
+      flags: parsed.flags,
+      logger,
+      output,
+    });
+  } catch (error) {
+    output.stderr(formatError(error));
+    return errorToExitCode(error);
+  }
 }
 
 export function parseCliArgs(argv: string[]): ParsedArgs {
-	const flags: GlobalFlags = {
-		help: false,
-		version: false,
-		json: false,
-		quiet: false,
-		verbose: false,
-	};
+  const flags: GlobalFlags = {
+    help: false,
+    version: false,
+    json: false,
+    quiet: false,
+    verbose: false,
+  };
 
-	const positionals: string[] = [];
+  const positionals: string[] = [];
 
-	for (const token of argv) {
-		if (token === "-h" || token === "--help") {
-			flags.help = true;
-			continue;
-		}
+  for (const token of argv) {
+    if (token === "-h" || token === "--help") {
+      flags.help = true;
+      continue;
+    }
 
-		if (token === "--version") {
-			flags.version = true;
-			continue;
-		}
+    if (token === "--version") {
+      flags.version = true;
+      continue;
+    }
 
-		if (token === "--json") {
-			flags.json = true;
-			continue;
-		}
+    if (token === "--json") {
+      flags.json = true;
+      continue;
+    }
 
-		if (token === "-q" || token === "--quiet") {
-			flags.quiet = true;
-			continue;
-		}
+    if (token === "-q" || token === "--quiet") {
+      flags.quiet = true;
+      continue;
+    }
 
-		if (token === "-v" || token === "--verbose") {
-			flags.verbose = true;
-			continue;
-		}
+    if (token === "-v" || token === "--verbose") {
+      flags.verbose = true;
+      continue;
+    }
 
-		positionals.push(token);
-	}
+    positionals.push(token);
+  }
 
-	let normalizedPositionals = positionals;
+  let normalizedPositionals = positionals;
 
-	if (normalizedPositionals[0] === "help") {
-		flags.help = true;
-		normalizedPositionals = normalizedPositionals.slice(1);
-	}
+  if (normalizedPositionals[0] === "help") {
+    flags.help = true;
+    normalizedPositionals = normalizedPositionals.slice(1);
+  }
 
-	let command: CommandName | undefined;
-	const resolved = normalizedPositionals[0]
-		? resolveCommand(normalizedPositionals[0])
-		: undefined;
+  let command: CommandName | undefined;
+  const resolved = normalizedPositionals[0] ? resolveCommand(normalizedPositionals[0]) : undefined;
 
-	if (resolved) {
-		command = resolved;
-		normalizedPositionals = normalizedPositionals.slice(1);
-	}
+  if (resolved) {
+    command = resolved;
+    normalizedPositionals = normalizedPositionals.slice(1);
+  }
 
-	if (flags.help) {
-		return {
-			command,
-			commandArgs: normalizedPositionals,
-			flags,
-		};
-	}
+  if (flags.help) {
+    return {
+      command,
+      commandArgs: normalizedPositionals,
+      flags,
+    };
+  }
 
-	if (!command && normalizedPositionals.length > 0) {
-		throw new CliUsageError(
-			`Unknown command: ${normalizedPositionals[0]}`,
-		);
-	}
+  if (!command && normalizedPositionals.length > 0) {
+    throw new CliUsageError(`Unknown command: ${normalizedPositionals[0]}`);
+  }
 
-	return {
-		command,
-		commandArgs: normalizedPositionals,
-		flags,
-	};
+  return {
+    command,
+    commandArgs: normalizedPositionals,
+    flags,
+  };
 }

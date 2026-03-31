@@ -49,11 +49,11 @@ Examples:
 `;
 
 export const listCommand: CommandDefinition = {
-	description: "List Chrome sessions and tabs.",
-	helpText: LIST_HELP_TEXT,
-	examples: ["list sessions", "list saved", "list tabs 123"],
-	run: ({ args, env, flags, logger, output }) =>
-		runListCommand({ args, env, json: flags.json, logger, output }),
+  description: "List Chrome sessions and tabs.",
+  helpText: LIST_HELP_TEXT,
+  examples: ["list sessions", "list saved", "list tabs 123"],
+  run: ({ args, env, flags, logger, output }) =>
+    runListCommand({ args, env, json: flags.json, logger, output }),
 };
 
 const defaultDependencies: ListCommandDependencies = {

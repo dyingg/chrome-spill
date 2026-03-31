@@ -28,16 +28,14 @@ export async function runMcpCommand(options: McpCommandOptions): Promise<number>
 }
 
 export const mcpCommand: CommandDefinition = {
-	description: "Start the local MCP server over stdin/stdout.",
-	helpText: MCP_HELP_TEXT,
-	examples: ["mcp"],
-	run: async ({ args, env, logger }) => {
-		if (args.length > 0) {
-			throw new CliUsageError(
-				`Unexpected arguments for mcp: ${args.join(" ")}`,
-			);
-		}
+  description: "Start the local MCP server over stdin/stdout.",
+  helpText: MCP_HELP_TEXT,
+  examples: ["mcp"],
+  run: async ({ args, env, logger }) => {
+    if (args.length > 0) {
+      throw new CliUsageError(`Unexpected arguments for mcp: ${args.join(" ")}`);
+    }
 
-		return await runMcpCommand({ env, logger });
-	},
+    return await runMcpCommand({ env, logger });
+  },
 };
