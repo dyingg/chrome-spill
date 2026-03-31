@@ -4,9 +4,9 @@ import { chunkMarkdown } from "./chunk.js";
 import { preprocessHtml } from "./preprocess.js";
 import type { IndexedChunk, PageInput, SearchResult } from "./types.js";
 
-export type { IndexedChunk, PageInput, SearchResult } from "./types.js";
-export { preprocessHtml } from "./preprocess.js";
 export { chunkMarkdown } from "./chunk.js";
+export { preprocessHtml } from "./preprocess.js";
+export type { IndexedChunk, PageInput, SearchResult } from "./types.js";
 
 const PREP_TASKS = [
   nlp.string.lowerCase,

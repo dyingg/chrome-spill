@@ -3,7 +3,7 @@ import type { Logger } from "../lib/logger.js";
 import type { Output } from "../lib/output.js";
 import { isInteractiveTerminal } from "../lib/terminal.js";
 import { type SelectOption, selectOne } from "../lib/tui/select.js";
-import { type PageInput, type SearchResult, buildIndex } from "../lib/workflows/search/index.js";
+import { buildIndex, type PageInput, type SearchResult } from "../lib/workflows/search/index.js";
 import { focusTab, getAllTabs } from "../platform/macos/chrome/index.js";
 
 interface SearchCommandOptions {

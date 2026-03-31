@@ -1,9 +1,8 @@
 import { describe, expect, test } from "bun:test";
-
-import { chunkMarkdown } from "../../src/lib/workflows/search/chunk.js";
-import { preprocessHtml } from "../../src/lib/workflows/search/preprocess.js";
-import { buildIndex } from "../../src/lib/workflows/search/index.js";
 import { parseSearchArgs } from "../../src/commands/search.js";
+import { chunkMarkdown } from "../../src/lib/workflows/search/chunk.js";
+import { buildIndex } from "../../src/lib/workflows/search/index.js";
+import { preprocessHtml } from "../../src/lib/workflows/search/preprocess.js";
 
 // ---------------------------------------------------------------------------
 // preprocessHtml
@@ -101,8 +100,20 @@ describe("buildIndex", () => {
 
   test("finds a page by title keyword", () => {
     const index = buildIndex([
-      { url: "https://a.com", windowId: "1", tabId: "10", title: "React Hooks Guide", html: "<p>useState and useEffect</p>" },
-      { url: "https://b.com", windowId: "1", tabId: "20", title: "Cooking Recipes", html: "<p>How to bake bread</p>" },
+      {
+        url: "https://a.com",
+        windowId: "1",
+        tabId: "10",
+        title: "React Hooks Guide",
+        html: "<p>useState and useEffect</p>",
+      },
+      {
+        url: "https://b.com",
+        windowId: "1",
+        tabId: "20",
+        title: "Cooking Recipes",
+        html: "<p>How to bake bread</p>",
+      },
     ]);
 
     const results = index.search("react hooks");
@@ -112,8 +123,20 @@ describe("buildIndex", () => {
 
   test("finds a page by body content", () => {
     const index = buildIndex([
-      { url: "https://a.com", windowId: "1", tabId: "10", title: "Page A", html: "<p>TypeScript generics tutorial</p>" },
-      { url: "https://b.com", windowId: "1", tabId: "20", title: "Page B", html: "<p>Python decorators guide</p>" },
+      {
+        url: "https://a.com",
+        windowId: "1",
+        tabId: "10",
+        title: "Page A",
+        html: "<p>TypeScript generics tutorial</p>",
+      },
+      {
+        url: "https://b.com",
+        windowId: "1",
+        tabId: "20",
+        title: "Page B",
+        html: "<p>Python decorators guide</p>",
+      },
     ]);
 
     const results = index.search("typescript generics");
@@ -137,7 +160,13 @@ describe("buildIndex", () => {
 
   test("results include score", () => {
     const index = buildIndex([
-      { url: "https://a.com", windowId: "1", tabId: "10", title: "Test", html: "<p>hello world</p>" },
+      {
+        url: "https://a.com",
+        windowId: "1",
+        tabId: "10",
+        title: "Test",
+        html: "<p>hello world</p>",
+      },
     ]);
 
     const results = index.search("hello");
