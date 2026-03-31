@@ -29,6 +29,7 @@ Do not introduce a deep `core/domain/services` split until the shared runtime lo
 
 ## Runtime rules
 
+- This is a Bun project. Use Bun-native APIs (`Bun.spawn`, `Bun.write`, `Bun.file`, `Bun.Glob`, `bun:test`, etc.) instead of Node equivalents. Only fall back to `node:` modules when no Bun-native alternative exists (e.g. `node:fs/promises` for `mkdir`, `node:path`).
 - The project is macOS-only. Any real command execution on a non-macOS platform must fail with a friendly error.
 - `--help` and `--version` may remain platform-agnostic.
 - In MCP mode, stdout is protocol-only. Never print logs, banners, or debug text to stdout.
@@ -51,12 +52,12 @@ All Chrome interaction goes through JXA (JavaScript for Automation) executed via
   - `getSessions()` → all Chrome windows (id, name, mode, tab count, bounds, active tab index)
   - `getTabsInSession(windowId)` → tabs in one window (id, title, url, loading, active)
   - `getAllTabs()` → every tab across all windows
-  - `getSourceForTab(tabId)` → full `document.documentElement.outerHTML` for a tab
+  - `getSourceForTab(tabId)` → saves the tab to a temp file via Chrome's `save` command, reads it back, then cleans up. No special permissions needed.
 - `install.ts` — `detectChromeInstallation()` checks known `.app` paths (no JXA needed).
 
-**Testing pattern**: every function takes `run: JxaRunner = runJxa` as its last parameter. Unit tests inject a mock runner that returns canned JSON — no Chrome or osascript needed. Integration tests use the real runner against a live Chrome session.
+**ID types**: Chrome window and tab IDs are strings as returned by JXA. All interfaces use `string` for `id`, `windowId`, and `tabId`.
 
-**Prerequisite for `getSourceForTab`**: Chrome must have "Allow JavaScript from Apple Events" enabled (View → Developer → Allow JavaScript from Apple Events), otherwise the `execute` call in JXA will fail.
+**Testing pattern**: every function takes `run: JxaRunner = runJxa` as its last parameter. Unit tests inject a mock runner that returns canned JSON — no Chrome or osascript needed. Integration tests use the real runner against a live Chrome session.
 
 ## Linting and formatting
 
