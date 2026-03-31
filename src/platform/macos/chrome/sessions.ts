@@ -16,7 +16,7 @@ const GET_SESSIONS_SCRIPT = `(() => {
   for (let i = 0; i < winCount; i++) {
     const w = chrome.windows[i];
     result.push({
-      id: w.id(),
+      id: String(w.id()),
       name: w.name(),
       mode: w.mode(),
       tabCount: w.tabs.length,
@@ -33,13 +33,13 @@ const GET_ALL_TABS_SCRIPT = `(() => {
   const winCount = chrome.windows.length;
   for (let i = 0; i < winCount; i++) {
     const w = chrome.windows[i];
-    const wId = w.id();
+    const wId = String(w.id());
     const tabCount = w.tabs.length;
     const activeIdx = w.activeTabIndex();
     for (let j = 0; j < tabCount; j++) {
       const t = w.tabs[j];
       result.push({
-        id: t.id(),
+        id: String(t.id()),
         windowId: wId,
         index: j,
         title: t.title(),
@@ -65,8 +65,8 @@ function tabsInSessionScript(windowId: string): string {
       for (let j = 0; j < tabCount; j++) {
         const t = w.tabs[j];
         tabs.push({
-          id: t.id(),
-          windowId: ${windowId},
+          id: String(t.id()),
+          windowId: "${windowId}",
           index: j,
           title: t.title(),
           url: t.url(),
@@ -92,8 +92,8 @@ function tabMetadataScript(tabId: string): string {
       const t = w.tabs[j];
       if (t.id() === "${tabId}") {
         return JSON.stringify({
-          tabId: t.id(),
-          windowId: w.id(),
+          tabId: String(t.id()),
+          windowId: String(w.id()),
           url: t.url(),
           title: t.title()
         });
