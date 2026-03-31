@@ -15,9 +15,15 @@ describe("preprocessHtml", () => {
     expect(result.markdown).toContain("Hello world");
   });
 
-  test("extracts title from first heading", () => {
+  test("prefers fallback title over markdown heading", () => {
     const html = "<h1>My Title</h1><p>body</p>";
     const result = preprocessHtml(html, "fallback");
+    expect(result.title).toBe("fallback");
+  });
+
+  test("extracts title from heading when no fallback", () => {
+    const html = "<h1>My Title</h1><p>body</p>";
+    const result = preprocessHtml(html, "");
     expect(result.title).toBe("My Title");
   });
 
