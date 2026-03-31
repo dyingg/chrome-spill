@@ -6,6 +6,7 @@ import { isInteractiveTerminal } from "../lib/terminal.js";
 import { type SelectOption, selectOne } from "../lib/tui/select.js";
 import { buildIndex, type SearchResult } from "../lib/workflows/search/index.js";
 import { focusTab, getAllTabs } from "../platform/macos/chrome/index.js";
+import type { CommandDefinition } from "./types.js";
 
 interface SearchCommandOptions {
   args: string[];
@@ -47,6 +48,14 @@ Examples:
 `;
 
 const DEFAULT_TOP = 4;
+
+export const searchCommand: CommandDefinition = {
+	description: "Search open Chrome tabs by page content.",
+	helpText: SEARCH_HELP_TEXT,
+	examples: ['search "react hooks"'],
+	run: ({ args, env, flags, logger, output }) =>
+		runSearchCommand({ args, env, json: flags.json, logger, output }),
+};
 
 const defaultDependencies: SearchCommandDependencies = {
   buildIndex,

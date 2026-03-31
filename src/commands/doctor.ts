@@ -1,8 +1,10 @@
 import { resolveAppPaths } from "../lib/config.js";
+import { CliUsageError } from "../lib/errors.js";
 import type { Logger } from "../lib/logger.js";
 import type { Output } from "../lib/output.js";
 import { getRuntimePlatform } from "../platform/guard.js";
 import { getMacOSDoctorSnapshot } from "../platform/macos/index.js";
+import type { CommandDefinition } from "./types.js";
 
 export const DOCTOR_HELP_TEXT = `Usage:
   chrome-spill doctor [--json]
@@ -63,3 +65,18 @@ export async function runDoctorCommand(options: DoctorCommandOptions): Promise<n
 
   return 0;
 }
+
+export const doctorCommand: CommandDefinition = {
+	description: "Inspect the local runtime and report macOS-specific readiness.",
+	helpText: DOCTOR_HELP_TEXT,
+	examples: ["doctor", "doctor --json"],
+	run: async ({ args, env, flags, logger, output }) => {
+		if (args.length > 0) {
+			throw new CliUsageError(
+				`Unexpected arguments for doctor: ${args.join(" ")}`,
+			);
+		}
+
+		return await runDoctorCommand({ env, json: flags.json, logger, output });
+	},
+};

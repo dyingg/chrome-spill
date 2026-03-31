@@ -1,5 +1,7 @@
+import { CliUsageError } from "../lib/errors.js";
 import type { Logger } from "../lib/logger.js";
 import { startMcpServer } from "../mcp/server.js";
+import type { CommandDefinition } from "./types.js";
 
 export const MCP_HELP_TEXT = `Usage:
   chrome-spill mcp
@@ -24,3 +26,18 @@ export async function runMcpCommand(options: McpCommandOptions): Promise<number>
 
   return 0;
 }
+
+export const mcpCommand: CommandDefinition = {
+	description: "Start the local MCP server over stdin/stdout.",
+	helpText: MCP_HELP_TEXT,
+	examples: ["mcp"],
+	run: async ({ args, env, logger }) => {
+		if (args.length > 0) {
+			throw new CliUsageError(
+				`Unexpected arguments for mcp: ${args.join(" ")}`,
+			);
+		}
+
+		return await runMcpCommand({ env, logger });
+	},
+};

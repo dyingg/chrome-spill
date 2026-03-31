@@ -9,6 +9,7 @@ import { renderTable } from "../lib/table.js";
 import { isInteractiveTerminal } from "../lib/terminal.js";
 import { type SelectOption, selectOne } from "../lib/tui/select.js";
 import { getSessions, getTabsInSession } from "../platform/macos/chrome/index.js";
+import type { CommandDefinition } from "./types.js";
 
 interface ListCommandOptions {
   args: string[];
@@ -46,6 +47,14 @@ Examples:
   chrome-spill list tabs
   chrome-spill list saved
 `;
+
+export const listCommand: CommandDefinition = {
+	description: "List Chrome sessions and tabs.",
+	helpText: LIST_HELP_TEXT,
+	examples: ["list sessions", "list saved", "list tabs 123"],
+	run: ({ args, env, flags, logger, output }) =>
+		runListCommand({ args, env, json: flags.json, logger, output }),
+};
 
 const defaultDependencies: ListCommandDependencies = {
   getSessions,

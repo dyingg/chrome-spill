@@ -13,6 +13,7 @@ import {
 import { isInteractiveTerminal } from "../lib/terminal.js";
 import { type SelectOption, selectOne } from "../lib/tui/select.js";
 import { getSessions, getTabsInSession } from "../platform/macos/chrome/index.js";
+import type { CommandDefinition } from "./types.js";
 
 interface SaveCommandOptions {
   args: string[];
@@ -46,6 +47,15 @@ Examples:
   chrome-spill save 123
   chrome-spill save 123 --output ./work-session.json
 `;
+
+export const saveCommand: CommandDefinition = {
+	description: "Save Chrome sessions into the store format.",
+	helpText: SAVE_HELP_TEXT,
+	aliases: ["dump"],
+	examples: ["save", "save 123"],
+	run: ({ args, env, flags, logger, output }) =>
+		runSaveCommand({ args, env, json: flags.json, logger, output }),
+};
 
 const defaultDependencies: SaveCommandDependencies = {
   getSessions,

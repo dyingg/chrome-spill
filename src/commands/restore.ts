@@ -17,6 +17,7 @@ import {
   type RestoreSessionResult,
   restoreSession,
 } from "../platform/macos/chrome/index.js";
+import type { CommandDefinition } from "./types.js";
 
 interface RestoreCommandOptions {
   args: string[];
@@ -59,6 +60,14 @@ Examples:
   chrome-spill restore ./sessions/work.json
   chrome-spill restore morning-tabs --profile "Profile 1"
 `;
+
+export const restoreCommand: CommandDefinition = {
+	description: "Restore saved Chrome sessions from a file or the default store.",
+	helpText: RESTORE_HELP_TEXT,
+	examples: ["restore", "restore morning-tabs"],
+	run: ({ args, env, flags, logger, output }) =>
+		runRestoreCommand({ args, env, json: flags.json, logger, output }),
+};
 
 const defaultDependencies: RestoreCommandDependencies = {
   getProfiles,
