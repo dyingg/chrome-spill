@@ -14,7 +14,7 @@ interface CreateLoggerOptions {
 }
 
 export function createLogger(options: CreateLoggerOptions = {}): Logger {
-  const name = options.name ?? "chrome-spill";
+  const name = options.name ?? "chromectx";
   const quiet = options.quiet ?? false;
   const verbose = options.verbose ?? false;
   const stream = options.stream ?? process.stderr;

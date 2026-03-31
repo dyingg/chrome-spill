@@ -11,12 +11,12 @@ export interface AppPaths {
 export function resolveAppPaths(env: NodeJS.ProcessEnv = process.env): AppPaths {
   const home = env.HOME ?? os.homedir();
 
-  const support = path.join(home, "Library", "Application Support", "chrome-spill");
+  const support = path.join(home, "Library", "Application Support", "chromectx");
 
   return {
     support,
-    cache: path.join(home, "Library", "Caches", "chrome-spill"),
-    logs: path.join(home, "Library", "Logs", "chrome-spill"),
+    cache: path.join(home, "Library", "Caches", "chromectx"),
+    logs: path.join(home, "Library", "Logs", "chromectx"),
     sessions: path.join(support, "sessions"),
   };
 }

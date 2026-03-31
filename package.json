@@ -1,5 +1,5 @@
 {
-  "name": "chrome-spill",
+  "name": "chromectx",
   "version": "0.1.0",
   "private": true,
   "author": {
@@ -11,7 +11,7 @@
     "darwin"
   ],
   "bin": {
-    "chrome-spill": "./src/bin/cli.ts"
+    "chromectx": "./src/bin/cli.ts"
   },
   "scripts": {
     "dev": "bun run src/bin/cli.ts",
