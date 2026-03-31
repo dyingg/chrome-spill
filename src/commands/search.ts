@@ -1,9 +1,10 @@
 import { CliUsageError } from "../lib/errors.js";
+import { fetchSources } from "../lib/http.js";
 import type { Logger } from "../lib/logger.js";
 import type { Output } from "../lib/output.js";
 import { isInteractiveTerminal } from "../lib/terminal.js";
 import { type SelectOption, selectOne } from "../lib/tui/select.js";
-import { buildIndex, type PageInput, type SearchResult } from "../lib/workflows/search/index.js";
+import { type SearchResult, buildIndex } from "../lib/workflows/search/index.js";
 import { focusTab, getAllTabs } from "../platform/macos/chrome/index.js";
 
 interface SearchCommandOptions {
@@ -17,6 +18,7 @@ interface SearchCommandOptions {
 
 interface SearchCommandDependencies {
   buildIndex: typeof buildIndex;
+  fetchSources: typeof fetchSources;
   focusTab: typeof focusTab;
   getAllTabs: typeof getAllTabs;
   isInteractiveTerminal: typeof isInteractiveTerminal;
@@ -45,10 +47,10 @@ Examples:
 `;
 
 const DEFAULT_TOP = 4;
-const FETCH_CONCURRENCY = 20;
 
 const defaultDependencies: SearchCommandDependencies = {
   buildIndex,
+  fetchSources,
   focusTab,
   getAllTabs,
   isInteractiveTerminal,
@@ -74,9 +76,9 @@ export async function runSearchCommand(options: SearchCommandOptions): Promise<n
 
   options.logger.info(`Fetching content from ${tabs.length} tab(s)…`);
 
-  const pages = await fetchPages(
+  const pages = await deps.fetchSources(
     tabs.map((tab) => ({ url: tab.url, windowId: tab.windowId, tabId: tab.id, title: tab.title })),
-    options.logger,
+    { logger: options.logger },
   );
 
   if (pages.length === 0) {
@@ -167,34 +169,4 @@ export function parseSearchArgs(args: string[]): SearchArguments {
 
 function truncate(text: string, max: number): string {
   return text.length > max ? `${text.slice(0, max - 1)}…` : text;
-}
-
-async function fetchPages(
-  tabs: { url: string; windowId: string; tabId: string; title: string }[],
-  logger: Logger,
-): Promise<PageInput[]> {
-  const pages: PageInput[] = [];
-
-  for (let i = 0; i < tabs.length; i += FETCH_CONCURRENCY) {
-    const chunk = tabs.slice(i, i + FETCH_CONCURRENCY);
-    const results = await Promise.allSettled(
-      chunk.map(async (tab) => {
-        if (!tab.url.startsWith("http")) return null;
-        const response = await fetch(tab.url);
-        if (!response.ok) return null;
-        const html = await response.text();
-        return { ...tab, html } satisfies PageInput;
-      }),
-    );
-
-    for (const result of results) {
-      if (result.status === "fulfilled" && result.value) {
-        pages.push(result.value);
-      } else if (result.status === "rejected") {
-        logger.debug(`Fetch failed: ${result.reason}`);
-      }
-    }
-  }
-
-  return pages;
 }
