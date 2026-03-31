@@ -184,9 +184,10 @@ function truncate(text: string, max: number): string {
 function renderTabsTable(tabs: ChromeTab[]): string {
   const rows = tabs.map((tab) => [
     tab.active ? `* ${tab.index}` : `  ${tab.index}`,
+    tab.id,
     truncate(tab.title, 50),
     truncate(tab.url, 60),
   ]);
 
-  return renderTable(["#", "TITLE", "URL"], rows);
+  return renderTable(["#", "ID", "TITLE", "URL"], rows);
 }
