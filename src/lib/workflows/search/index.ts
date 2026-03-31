@@ -62,6 +62,26 @@ export function buildIndex(pages: PageInput[]): SearchIndex {
     };
   }
 
+  // BM25 requires at least 3 documents to consolidate. For tiny corpora
+  // fall back to simple case-insensitive substring matching.
+  if (chunks.length < 3) {
+    return {
+      search(query: string, topK = 5): SearchResult[] {
+        const lower = query.toLowerCase();
+        return chunks
+          .map((chunk) => {
+            const titleHit = chunk.title.toLowerCase().includes(lower) ? 3 : 0;
+            const bodyHit = chunk.body.toLowerCase().includes(lower) ? 1 : 0;
+            return { ...chunk, score: titleHit + bodyHit };
+          })
+          .filter((r) => r.score > 0)
+          .sort((a, b) => b.score - a.score)
+          .slice(0, topK);
+      },
+      size: chunks.length,
+    };
+  }
+
   engine.consolidate();
 
   return {
