@@ -11,10 +11,10 @@ Instantly finds the right tab across 90+ open tabs. No page fetching — results
 
 ```bash
 # Deep — fetches and indexes full page content
-chromectx search 'useEffect cleanup memory leak' --deep
+chromectx search 'max connections pool timeout' --deep
 ```
 
-Can't remember which docs tab mentioned that gotcha about `useEffect` cleanup causing memory leaks? `--deep` fetches every open page's content and searches the actual body text — finds it even when the tab title just says "React Reference".
+You read something 20 tabs ago about connection pool limits causing timeouts in production — but which tab was it? The title just says "Configuration" or "Advanced Settings." `--deep` fetches every open page's content and searches the actual text, so you find it without retracing your steps.
 
 And even better: make your open browser tabs RAG context for Claude, Cursor, and other AI tools via the [Model Context Protocol](https://modelcontextprotocol.io).
 
