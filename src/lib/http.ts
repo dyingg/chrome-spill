@@ -1,8 +1,16 @@
+import path from "node:path";
 import type { TabSource } from "../browser/types.js";
+import { TtlCache } from "./cache.js";
 import { pMap } from "./concurrent.js";
+import { resolveAppPaths } from "./config.js";
+import { DiskCache } from "./disk-cache.js";
 import type { Logger } from "./logger.js";
 
 const DEFAULT_CONCURRENCY = 50;
+const DEFAULT_TTL_MS = 1_200_000; // 20 minutes
+
+const memoryCache = new TtlCache<string>(DEFAULT_TTL_MS);
+const diskCache = new DiskCache(path.join(resolveAppPaths().cache, "html"), DEFAULT_TTL_MS);
 
 interface FetchSourcesOptions {
   concurrency?: number;
@@ -32,9 +40,37 @@ export async function fetchSources(
         return null;
       }
 
+      // L1: in-memory cache
+      const memoryCached = memoryCache.get(tab.url);
+      if (memoryCached !== undefined) {
+        return {
+          tabId: tab.tabId,
+          windowId: tab.windowId,
+          url: tab.url,
+          title: tab.title,
+          html: memoryCached,
+        };
+      }
+
+      // L2: disk cache
+      const diskCached = await diskCache.get(tab.url);
+      if (diskCached !== undefined) {
+        memoryCache.set(tab.url, diskCached);
+        return {
+          tabId: tab.tabId,
+          windowId: tab.windowId,
+          url: tab.url,
+          title: tab.title,
+          html: diskCached,
+        };
+      }
+
+      // L3: network fetch
       try {
         const response = await fetch(tab.url);
         const html = await response.text();
+        memoryCache.set(tab.url, html);
+        diskCache.set(tab.url, html).catch(() => {});
         return {
           tabId: tab.tabId,
           windowId: tab.windowId,
@@ -52,4 +88,9 @@ export async function fetchSources(
   );
 
   return results.filter((r): r is TabSource => r !== null);
+}
+
+/** @internal Reset in-memory cache — for test isolation. */
+export function resetHttpCache(): void {
+  memoryCache.clear();
 }
