@@ -12,7 +12,8 @@ This repo is a TypeScript codebase (runs on Bun) with one executable surface:
 - `chromectx restore ...`
 - `chromectx save ...`
 - `chromectx list ...`
-- `chromectx search ...`
+- `chromectx search ...` — fast title+URL search; `--deep` fetches full page content
+- `chromectx rag ...` — RAG search across tabs (JSON output for agents/scripts)
 - `chromectx mcp`
 
 The MCP server is local-only and uses stdio. Treat the CLI and MCP server as two transports around shared code rather than as separate applications.
@@ -25,9 +26,11 @@ The MCP server is local-only and uses stdio. Treat the CLI and MCP server as two
 - `src/mcp`: MCP protocol handling and tool registration
 - `src/platform/macos`: macOS-specific integrations and checks
 - `src/platform/macos/chrome/`: Chrome browser interaction (install detection, session/tab queries, page source retrieval)
-- `src/lib`: shared support modules such as config, errors, output, and logging
+- `src/lib`: shared support modules such as config, errors, output, logging, `concurrent.ts` (sliding-window `pMap`), and `http.ts` (shared `fetchSources` with concurrency 15)
 - `src/lib/tui/`: interactive terminal UI components built on `@clack/prompts` — `select.ts` exports `selectOne<T>()` (and will gain `selectMany<T>()` later). Use these for any arrow-key selection in CLI commands; inject via `deps` for testing.
 - `src/lib/store/`: session persistence — `types.ts` defines the schema contract (`Session`, `SessionWindow`, `SessionTab`); `io.ts` handles read/write/list to `{AppPaths.sessions}/*.json`
+- `src/lib/workflows/search/`: BM25 search pipeline — `preprocess.ts` (HTML→markdown via turndown), `chunk.ts` (paragraph chunking ~500 chars), `index.ts` (`buildIndex` + `SearchIndex` with `search` and `searchWithPages`)
+- `src/lib/workflows/rag.ts`: shared RAG pipeline (`executeRag`) used by both CLI `rag` command and MCP `rag_search` tool
 
 ## Default store
 
@@ -77,8 +80,8 @@ All Chrome interaction goes through JXA (JavaScript for Automation) executed via
   - `getSessions()` → all Chrome windows (id, name, mode, tab count, bounds, active tab index)
   - `getTabsInSession(windowId)` → tabs in one window (id, title, url, loading, active)
   - `getAllTabs()` → every tab across all windows
-  - `getSourceForTab(tabId)` → fetches the tab's URL via `fetch()` and returns the HTML. No macOS file permissions or Apple Events JS toggle needed.
-  - `getSourceForSession(windowId, run?, concurrency?)` → fetches HTML for every tab in a window. Makes one JXA call to list tabs, then fetches all URLs concurrently in chunks (default 20). Returns `TabSource[]`.
+  - `getSourceForTab(tabId)` → fetches the tab's URL via shared `fetchSources` and returns the HTML. No macOS file permissions or Apple Events JS toggle needed.
+  - `getSourceForSession(windowId)` → fetches HTML for every tab in a window. Makes one JXA call to list tabs, then fetches all URLs concurrently via shared `fetchSources` (concurrency 15). Returns `TabSource[]`.
 - `install.ts` — `detectChromeInstallation()` checks known `.app` paths (no JXA needed).
 
 **ID types**: Chrome window and tab IDs are strings as returned by JXA. All interfaces use `string` for `id`, `windowId`, and `tabId`.
