@@ -29,22 +29,23 @@ interface SearchCommandDependencies {
 interface SearchArguments {
   query: string;
   top: number | undefined;
+  deep: boolean;
 }
 
 export const SEARCH_HELP_TEXT = `Usage:
-  chromectx search <query> [--top <n>] [--json]
+  chromectx search <query> [--top <n>] [--deep] [--json]
 
-Search open Chrome tabs by content. Fetches each tab's page source,
-builds a BM25 index, and ranks results by relevance. Duplicate URLs
-are collapsed automatically (highest-scoring chunk wins).
+Search open Chrome tabs by title and URL. Fast — no page fetching.
+Pass --deep to fetch and index full page content instead.
 
 Options:
   --top <n>   Maximum number of results to show (default: all)
+  --deep      Fetch full page content and search by body text
   --json      Output results as JSON instead of interactive selection
 
 Examples:
   chromectx search "react hooks"
-  chromectx search "login bug" --top 5
+  chromectx search "login bug" --deep
   chromectx search "API docs" --json
 `;
 
@@ -78,24 +79,44 @@ export async function runSearchCommand(options: SearchCommandOptions): Promise<n
     return 0;
   }
 
-  options.logger.info(`Fetching content from ${tabs.length} tab(s)…`);
+  let index: ReturnType<typeof buildIndex>;
 
-  t0 = performance.now();
-  const pages = await deps.fetchSources(
-    tabs.map((tab) => ({ url: tab.url, windowId: tab.windowId, tabId: tab.id, title: tab.title })),
-    { logger: options.logger },
-  );
-  options.logger.debug(`Fetched ${pages.length} page(s) in ${elapsed(t0)}`);
+  if (parsed.deep) {
+    options.logger.info(`Fetching content from ${tabs.length} tab(s)…`);
 
-  if (pages.length === 0) {
-    options.output.stdout("Could not fetch content from any tabs.");
-    return 0;
+    t0 = performance.now();
+    const pages = await deps.fetchSources(
+      tabs.map((tab) => ({
+        url: tab.url,
+        windowId: tab.windowId,
+        tabId: tab.id,
+        title: tab.title,
+      })),
+      { logger: options.logger },
+    );
+    options.logger.debug(`Fetched ${pages.length} page(s) in ${elapsed(t0)}`);
+
+    if (pages.length === 0) {
+      options.output.stdout("Could not fetch content from any tabs.");
+      return 0;
+    }
+
+    options.logger.info(`Indexing ${pages.length} page(s)…`);
+    t0 = performance.now();
+    index = deps.buildIndex(pages);
+    options.logger.debug(`Built index (${index.size} chunks) in ${elapsed(t0)}`);
+  } else {
+    t0 = performance.now();
+    const pages = tabs.map((tab) => ({
+      tabId: tab.id,
+      windowId: tab.windowId,
+      url: tab.url,
+      title: tab.title,
+      html: `<p>${tab.title}</p><p>${tab.url}</p>`,
+    }));
+    index = deps.buildIndex(pages);
+    options.logger.debug(`Built lightweight index (${tabs.length} tabs) in ${elapsed(t0)}`);
   }
-
-  options.logger.info(`Indexing ${pages.length} page(s)…`);
-  t0 = performance.now();
-  const index = deps.buildIndex(pages);
-  options.logger.debug(`Built index (${index.size} chunks) in ${elapsed(t0)}`);
 
   t0 = performance.now();
   const rawResults = index.search(parsed.query, index.size);
@@ -158,6 +179,7 @@ export async function runSearchCommand(options: SearchCommandOptions): Promise<n
 export function parseSearchArgs(args: string[]): SearchArguments {
   let query: string | undefined;
   let top: number | undefined;
+  let deep = false;
 
   for (let i = 0; i < args.length; i++) {
     const token = args[i];
@@ -169,6 +191,11 @@ export function parseSearchArgs(args: string[]): SearchArguments {
       if (Number.isNaN(n) || n < 1) throw new CliUsageError(`Invalid --top value: ${value}`);
       top = n;
       i += 1;
+      continue;
+    }
+
+    if (token === "--deep") {
+      deep = true;
       continue;
     }
 
@@ -186,7 +213,7 @@ export function parseSearchArgs(args: string[]): SearchArguments {
     throw new CliUsageError("Search query is required. Usage: chromectx search <query>");
   }
 
-  return { query, top };
+  return { query, top, deep };
 }
 
 function truncate(text: string, max: number): string {

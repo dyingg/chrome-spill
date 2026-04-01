@@ -213,8 +213,14 @@ describe("parseSearchArgs", () => {
     expect(() => parseSearchArgs(["query", "--top", "abc"])).toThrow("Invalid --top value");
   });
 
-  test("rejects removed --unique flag", () => {
-    expect(() => parseSearchArgs(["query", "--unique"])).toThrow("Unknown flag");
+  test("parses --deep flag", () => {
+    const result = parseSearchArgs(["query", "--deep"]);
+    expect(result.deep).toBe(true);
+  });
+
+  test("defaults deep to false", () => {
+    const result = parseSearchArgs(["query"]);
+    expect(result.deep).toBe(false);
   });
 });
 
