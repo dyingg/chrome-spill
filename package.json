@@ -11,9 +11,11 @@
     "darwin"
   ],
   "bin": {
-    "chromectx": "./src/bin/cli.ts"
+    "chromectx": "./dist/cli.js"
   },
   "scripts": {
+    "build": "bun run scripts/build.ts",
+    "prepublishOnly": "bun run build",
     "dev": "bun run src/bin/cli.ts",
     "doctor": "bun run src/bin/cli.ts doctor",
     "mcp": "bun run src/bin/cli.ts mcp",
