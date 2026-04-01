@@ -3,7 +3,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import type { Logger } from "../lib/logger.js";
 import { APP_NAME, APP_VERSION } from "../lib/meta.js";
 import { registerDoctorTool } from "./tools/doctor.js";
-import { registerRagTool } from "./tools/search.js";
+import { registerRagTool } from "./tools/rag.js";
 
 interface StartMcpServerOptions {
   env: NodeJS.ProcessEnv;
