@@ -88,11 +88,14 @@ describe("restore CLI integration", () => {
     const result = await waitForExit(child);
 
     expect(result.code).toBe(0);
-    await Bun.sleep(4_000);
 
-    const tabs = await getAllTabs();
-
-    expect(tabs.some((tab) => tab.url === restoreUrl)).toBe(true);
+    let found = false;
+    for (let attempt = 0; attempt < 15 && !found; attempt++) {
+      await Bun.sleep(1_000);
+      const tabs = await getAllTabs();
+      found = tabs.some((tab) => tab.url === restoreUrl);
+    }
+    expect(found).toBe(true);
     expect(JSON.parse(result.stdout)).toMatchObject({
       filePath: sessionPath,
       restoredTabs: 1,
