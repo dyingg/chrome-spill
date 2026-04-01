@@ -1,2 +1,5 @@
 export const APP_NAME = "chromectx";
-export const APP_VERSION = "0.1.0";
+
+declare const __APP_VERSION__: string;
+export const APP_VERSION =
+  typeof __APP_VERSION__ !== "undefined" ? __APP_VERSION__ : "0.0.0-dev";
