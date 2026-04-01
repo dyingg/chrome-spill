@@ -8,7 +8,7 @@ import type { Logger } from "./logger.js";
 
 const DEFAULT_CONCURRENCY = 50;
 const DEFAULT_TTL_MS = 1_200_000; // 20 minutes
-const FETCH_TIMEOUT_MS = 15_000; // 15 seconds per request
+const FETCH_TIMEOUT_MS = 30_000; // 30 seconds per request
 
 /**
  * Request headers that mimic Chrome on macOS.
