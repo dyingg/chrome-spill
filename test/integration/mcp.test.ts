@@ -34,12 +34,19 @@ describe("mcp integration", () => {
       });
 
       expect(toolsResponse.error).toBeUndefined();
-      expect(toolsResponse.result).toMatchObject({
-        tools: expect.arrayContaining([
+      const toolsList = toolsResponse.result as { tools: Array<Record<string, unknown>> };
+      expect(toolsList.tools).toEqual(
+        expect.arrayContaining([
           expect.objectContaining({ name: "doctor" }),
-          expect.objectContaining({ name: "rag_search" }),
+          expect.objectContaining({
+            name: "rag_search",
+            inputSchema: expect.objectContaining({
+              type: "object",
+              required: expect.arrayContaining(["query"]),
+            }),
+          }),
         ]),
-      });
+      );
       expect(server.stderr()).toBe("");
     });
   });
@@ -83,6 +90,58 @@ describe("mcp integration", () => {
           },
         },
       });
+    });
+  });
+
+  test("returns error for unknown tool", async () => {
+    await withMcpServer(async (server) => {
+      await server.request({
+        jsonrpc: "2.0",
+        id: 1,
+        method: "initialize",
+        params: {
+          protocolVersion: "2025-03-26",
+          capabilities: {},
+          clientInfo: { name: "test-client", version: "0.0.0" },
+        },
+      });
+
+      const response = await server.request({
+        jsonrpc: "2.0",
+        id: 2,
+        method: "tools/call",
+        params: { name: "nonexistent", arguments: {} },
+      });
+
+      const hasError =
+        response.error != null || (response.result as Record<string, unknown>)?.isError === true;
+      expect(hasError).toBe(true);
+    });
+  });
+
+  test("returns error when rag_search is called without required query param", async () => {
+    await withMcpServer(async (server) => {
+      await server.request({
+        jsonrpc: "2.0",
+        id: 1,
+        method: "initialize",
+        params: {
+          protocolVersion: "2025-03-26",
+          capabilities: {},
+          clientInfo: { name: "test-client", version: "0.0.0" },
+        },
+      });
+
+      const response = await server.request({
+        jsonrpc: "2.0",
+        id: 2,
+        method: "tools/call",
+        params: { name: "rag_search", arguments: {} },
+      });
+
+      const hasError =
+        response.error != null || (response.result as Record<string, unknown>)?.isError === true;
+      expect(hasError).toBe(true);
     });
   });
 });
