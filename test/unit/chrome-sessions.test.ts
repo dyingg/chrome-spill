@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test";
+import { resetHttpCache } from "../../src/lib/http.js";
 import type { JxaRunner } from "../../src/platform/macos/chrome/jxa.js";
 import {
   getAllTabs,
@@ -166,14 +167,16 @@ describe("getAllTabs", () => {
 describe("getSourceForTab", () => {
   const originalFetch = globalThis.fetch;
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    await resetHttpCache();
     globalThis.fetch = mock(
       async () => new Response("<html><body><h1>Example</h1></body></html>", { status: 200 }),
     ) as unknown as typeof fetch;
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     globalThis.fetch = originalFetch;
+    await resetHttpCache();
   });
 
   test("returns HTML source for a tab", async () => {
@@ -206,8 +209,13 @@ describe("getSourceForTab", () => {
 describe("getSourceForSession", () => {
   const originalFetch = globalThis.fetch;
 
-  afterEach(() => {
+  beforeEach(async () => {
+    await resetHttpCache();
+  });
+
+  afterEach(async () => {
     globalThis.fetch = originalFetch;
+    await resetHttpCache();
   });
 
   const fakeTabs = [

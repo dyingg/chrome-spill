@@ -39,7 +39,7 @@ describe("mcp integration", () => {
         expect.arrayContaining([
           expect.objectContaining({ name: "doctor" }),
           expect.objectContaining({
-            name: "rag_search",
+            name: "rag_chrome_search",
             inputSchema: expect.objectContaining({
               type: "object",
               required: expect.arrayContaining(["query"]),
@@ -119,7 +119,7 @@ describe("mcp integration", () => {
     });
   });
 
-  test("returns error when rag_search is called without required query param", async () => {
+  test("returns error when rag_chrome_search is called without required query param", async () => {
     await withMcpServer(async (server) => {
       await server.request({
         jsonrpc: "2.0",
@@ -136,7 +136,7 @@ describe("mcp integration", () => {
         jsonrpc: "2.0",
         id: 2,
         method: "tools/call",
-        params: { name: "rag_search", arguments: {} },
+        params: { name: "rag_chrome_search", arguments: {} },
       });
 
       const hasError =

@@ -90,7 +90,8 @@ export async function fetchSources(
   return results.filter((r): r is TabSource => r !== null);
 }
 
-/** @internal Reset in-memory cache — for test isolation. */
-export function resetHttpCache(): void {
+/** @internal Reset both cache layers — for test isolation. */
+export async function resetHttpCache(): Promise<void> {
   memoryCache.clear();
+  await diskCache.clear();
 }
